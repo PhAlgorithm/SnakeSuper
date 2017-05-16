@@ -12,7 +12,7 @@ namespace SnakeSuper
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new FormStart());
         }
-        
+
         public FormStart()
         {
             InitializeComponent();
@@ -20,8 +20,8 @@ namespace SnakeSuper
 
         private void buttonRules_Click(object sender, EventArgs e)
         {
-         MessageBox.Show(
-@"Правила такие: необходимо с помощью <стрелочек> управлять телом змеи.
+            MessageBox.Show(
+   @"Правила такие: необходимо с помощью <стрелочек> управлять телом змеи.
 Необходимо собирать красные яблока.С каждым съеденым яблоком увеличивается длина змейки.
 После каждых собранных 5 яблок увеличивается скорость смейки. В игре предусмотренно 3
 уровня игры: от новичка (уровень 1) до профи (уровень 3).Для уровня < 3 > необходимо
@@ -38,26 +38,23 @@ namespace SnakeSuper
         {
             if (cbStart.Text == "Level 1")          //используется для выбора уровня в форме Игра
             {
-                FormGame.AFFF = 1;
+                FormGame.ChekForLevel = 1;
             }
             if (cbStart.Text == "Level 2")
             {
-                FormGame.AFFF = 2;
+                FormGame.ChekForLevel = 2;
             }
             if (cbStart.Text == "Level 3")
             {
-                FormGame.AFFF = 3;
+                FormGame.ChekForLevel = 3;
             }
-
         }
-      
+
         private void buttonStart_Click(object sender, EventArgs e)
         {
             Hide();
             FormGame fg = new FormGame();
             fg.ShowDialog();
-            
         }
-               
     }
 }

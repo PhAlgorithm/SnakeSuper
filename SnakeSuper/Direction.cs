@@ -1,5 +1,4 @@
-﻿
-namespace SnakeSuper
+﻿namespace SnakeSuper
 {
     enum Direction
     {

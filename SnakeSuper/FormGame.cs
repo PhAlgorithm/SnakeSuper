@@ -27,8 +27,7 @@ namespace SnakeSuper
         Direction way = Direction.Right;           // направление движения змеи стрелками - по умолчанию
         int apples = 0;                            // количество собранных яблок
 
-        public static int AFFF;          //статическое пля для перехода в форму "старт"
-
+        public static int ChekForLevel;          //статическое пля для перехода в форму "старт"
 
         public FormGame()
         {
@@ -36,16 +35,16 @@ namespace SnakeSuper
             // условная высота поля
             H = (Size.Height - 2 * SystemInformation.CaptionHeight) / sConst * sConst;
             // условная ширина поля
-            W = (Size.Width - 2 * SystemInformation.FrameBorderSize.Width) / sConst * sConst;     
+            W = (Size.Width - 2 * SystemInformation.FrameBorderSize.Width) / sConst * sConst;
 
-            if (AFFF == 3)
+            if (ChekForLevel == 3)
             {
                 Paint += new PaintEventHandler(WallBarrier);                      //прорисовка сетки для 3-го уровня
             }
 
             Paint += new PaintEventHandler(FormGame_Paint);                   // прорисовка
 
-            if (AFFF == 1)
+            if (ChekForLevel == 1)
             {
                 Paint += new PaintEventHandler(DrawGrid);                         //прорисовка сетки для 1-го уровня
             }
@@ -60,8 +59,8 @@ namespace SnakeSuper
             // сначала мы координату делем на S ( в нашем случае 10), отбрасываем дробную часть, а потом
             // умножаем на S - и унас получается координаты кратны размеру элемента змеи
 
-            snake.Add(new CoordSnake() { X = W / 2 / sConst * sConst,              Y = H / 2 / sConst * sConst });
-            snake.Add(new CoordSnake() { X = W / 2 / sConst * sConst - sConst,     Y = H / 2 / sConst * sConst });
+            snake.Add(new CoordSnake() { X = W / 2 / sConst * sConst, Y = H / 2 / sConst * sConst });
+            snake.Add(new CoordSnake() { X = W / 2 / sConst * sConst - sConst, Y = H / 2 / sConst * sConst });
             snake.Add(new CoordSnake() { X = W / 2 / sConst * sConst - 2 * sConst, Y = H / 2 / sConst * sConst });
 
             // координаты яблока 
@@ -79,7 +78,6 @@ namespace SnakeSuper
             };
 
         }
-
 
         private void FormGame_KeyDown(object sender, KeyEventArgs e)          //выбор направления
         {
@@ -111,12 +109,10 @@ namespace SnakeSuper
             }
         }
 
-
         private void WallBarrier(object sender, PaintEventArgs e)
         {
             if (flag)
             {
-
                 for (int i = 0; i < wConst; i++)
                 {
                     barrier[i] = new Rectangle(
@@ -131,12 +127,11 @@ namespace SnakeSuper
             {
                 e.Graphics.FillRectangle(Brushes.Gold, barrier[i]);
             }
-
         }
-        
+
         private void DrawGrid(object sender, PaintEventArgs e)       //прорисовка сетки для уровня <1>
         {
-           using (Pen pen = new Pen(Color.Gray, 0.05f))
+            using (Pen pen = new Pen(Color.Gray, 0.05f))
             {
                 //Горизонтальные линии
                 for (int i = 0; i < H; i += sConst)
@@ -146,7 +141,7 @@ namespace SnakeSuper
                     e.Graphics.DrawLine(pen, i, 0, i, H);
             }
         }
-        
+
         private void FormGame_Paint(object sender, PaintEventArgs e)
         {
             // рисуем красным кружком яблоко, синим квадратом голову змеи и зелеными квадратами тело змеи
@@ -196,7 +191,7 @@ namespace SnakeSuper
                 if (snake[0].X == barrier[i].X && snake[0].Y == barrier[i].Y)
                 {
                     timer.Stop();
-                    MessageBox.Show($"К сожалению вы поиграли. Но вы набрали {apples} яблок", 
+                    MessageBox.Show($"К сожалению вы поиграли. Но вы набрали {apples} яблок",
                         "Инфа", MessageBoxButtons.OK);
 
                     Close();
@@ -226,9 +221,5 @@ namespace SnakeSuper
             }
             Invalidate();                                            // перерисовываем, 
         }
-
-
-
-
     }
 }

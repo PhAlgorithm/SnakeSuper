@@ -38,15 +38,15 @@ namespace SnakeSuper
         {
             if (cbStart.Text == "Level 1")          //используется для выбора уровня в форме Игра
             {
-                FormGame.AFFF = 1;
+                FormGame.ChekLevel = (int)LevelGame.First;
             }
             if (cbStart.Text == "Level 2")
             {
-                FormGame.AFFF = 2;
+                FormGame.ChekLevel = (int)LevelGame.Second;
             }
             if (cbStart.Text == "Level 3")
             {
-                FormGame.AFFF = 3;
+                FormGame.ChekLevel = (int)LevelGame.Thierd;
             }
 
         }
@@ -55,9 +55,7 @@ namespace SnakeSuper
         {
             Hide();
             FormGame fg = new FormGame();
-            fg.ShowDialog();
-            
-        }
-               
+            fg.ShowDialog();            
+        }               
     }
 }

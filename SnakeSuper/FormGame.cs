@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 
 namespace SnakeSuper
@@ -11,42 +12,50 @@ namespace SnakeSuper
 
         const int wConst = 10;                 // колличество элементов препятствия
 
+        int scoreLevel1 = 0;
+        int scoreLevel2 = 0;                    // результат уровня
+        int scoreLevel3 = 0;
+
         int H, W;                             //Габариты игрового поля
 
-        bool flag = true;                                      //флаг для первой инициализации массива препятствий
+        bool flagInitialiseBarrier = true;                       //флаг для первой инициализации массива препятствий
+
         Rectangle[] barrier = new Rectangle[wConst];           //массив препятствий для уровня <3>
 
         Timer timer = new Timer();
+
         Random rand = new Random();
 
-        List<CoordSnake> snake = new List<CoordSnake>();     //тело змеи
+        Direction way = Direction.Right;           // направление движения змеи стрелками - по умолчанию
 
-        CoordSnake apple;                                    // координаты яблока
+        Appels appleBody;                                    // координаты яблока
         CoordSnake wall;                                     // координаты препятствий
 
-        Direction way = Direction.Right;           // направление движения змеи стрелками - по умолчанию
+        SnakeBody snakeBodyMove;                            //тело змеи
+
         int apples = 0;                            // количество собранных яблок
 
-        public static int AFFF;          //статическое пля для перехода в форму "старт"
-
+        public static int ChekLevel;          //статическое пля для перехода в форму "старт"
 
         public FormGame()
         {
+
             InitializeComponent();
             // условная высота поля
             H = (Size.Height - 2 * SystemInformation.CaptionHeight) / sConst * sConst;
             // условная ширина поля
-            W = (Size.Width - 2 * SystemInformation.FrameBorderSize.Width) / sConst * sConst;     
+            W = (Size.Width - 2 * SystemInformation.FrameBorderSize.Width) / sConst * sConst;
 
-            if (AFFF == 3)
+            if (ChekLevel == (int)LevelGame.Thierd)
             {
                 Paint += new PaintEventHandler(WallBarrier);                      //прорисовка сетки для 3-го уровня
             }
 
             Paint += new PaintEventHandler(FormGame_Paint);                   // прорисовка
 
-            if (AFFF == 1)
+            if (ChekLevel == (int)LevelGame.First)
             {
+                // ChekLevel = (int)LevelGame.First;
                 Paint += new PaintEventHandler(DrawGrid);                         //прорисовка сетки для 1-го уровня
             }
 
@@ -56,20 +65,9 @@ namespace SnakeSuper
             timer.Tick += new EventHandler(timer_Tick);            // привязываем обработчик таймера
             timer.Start();
 
-            //добавляем элементы змеи. здесь мы будем приводить координаты к константе размера элемента змеи.
-            // сначала мы координату делем на S ( в нашем случае 10), отбрасываем дробную часть, а потом
-            // умножаем на S - и унас получается координаты кратны размеру элемента змеи
+            appleBody = new Appels(H, W, sConst);
 
-            snake.Add(new CoordSnake() { X = W / 2 / sConst * sConst,              Y = H / 2 / sConst * sConst });
-            snake.Add(new CoordSnake() { X = W / 2 / sConst * sConst - sConst,     Y = H / 2 / sConst * sConst });
-            snake.Add(new CoordSnake() { X = W / 2 / sConst * sConst - 2 * sConst, Y = H / 2 / sConst * sConst });
-
-            // координаты яблока 
-            apple = new CoordSnake()
-            {
-                X = rand.Next(20, W - 20) / sConst * sConst,
-                Y = rand.Next(30, H - 20) / sConst * sConst
-            };
+            snakeBodyMove = new SnakeBody(H, W, sConst);
 
             // координаты преграды 
             wall = new CoordSnake()
@@ -80,6 +78,126 @@ namespace SnakeSuper
 
         }
 
+        public void StopGame()
+        {
+            timer.Stop();
+
+            MessageBox.Show($"К сожалению вы поиграли. Но вы набрали {apples} яблок",
+                "Инфа", MessageBoxButtons.OK);
+
+            Close();
+        }
+
+        public void StopGameWinner()
+        {
+            timer.Stop();
+
+            Dictionary<int, int> score = new Dictionary<int, int>();
+
+            if (File.Exists(@"score.txt"))
+            {
+                using (StreamReader sr = new StreamReader(@"score.txt"))
+                {
+                    string read = null;
+
+                    while ((read = sr.ReadLine()) != null)
+                    {
+                        string[] pars = read.Split(',');
+                        int key = Convert.ToInt32(pars[0]);
+                        int value = Convert.ToInt32(pars[1]);
+
+                        score.Add(key, value);
+                    }
+                    sr.Close();
+
+                    if (ChekLevel == (int)LevelGame.First)
+                    {
+                        scoreLevel1 = apples;
+                        if (score[1] < scoreLevel1)
+                        {
+                            MessageBox.Show($"Вы набрали {scoreLevel1} яблок. Поздраляем, новый рекорд уровня {scoreLevel1} яблок", "Инфа", MessageBoxButtons.OK);
+                            score[1] = scoreLevel1;
+                            Close();
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Вы набрали {apples} яблок", "Инфа", MessageBoxButtons.OK);
+                            Close();
+                        }
+                    }
+
+                    if (ChekLevel == 0)
+                    {
+                        scoreLevel2 = apples;
+                        if (score[2] < scoreLevel2)
+                        {
+                            MessageBox.Show($"Вы набрали {scoreLevel2} яблок. Поздраляем, новый рекорд уровня {scoreLevel2} яблок", "Инфа", MessageBoxButtons.OK);
+                            score[2] = scoreLevel2;
+                            Close();
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Вы набрали {apples} яблок", "Инфа", MessageBoxButtons.OK);
+                            Close();
+                        }
+                    }
+
+                    if (ChekLevel == (int)LevelGame.Thierd)
+                    {
+                        scoreLevel3 = apples;
+                        if (score[3] < scoreLevel3)
+                        {
+                            MessageBox.Show($"Вы набрали {scoreLevel3} яблок. Поздраляем, новый рекорд уровня {scoreLevel3} яблок", "Инфа", MessageBoxButtons.OK);
+                            score[3] = scoreLevel3;
+                            Close();
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Вы набрали {apples} яблок", "Инфа", MessageBoxButtons.OK);
+                            Close();
+                        }
+                    }
+
+                }
+
+                using (StreamWriter sw = new StreamWriter(@"score.txt"))
+                {
+                    sw.WriteLine($"{(int)LevelGame.First},{score[1]}");
+                    sw.WriteLine($"{(int)LevelGame.Second},{score[2]}");
+                    sw.WriteLine($"{(int)LevelGame.Thierd},{score[3]}");
+                    sw.Close();
+                }
+
+                Application.Exit();
+            }
+
+            if (!File.Exists(@"score.txt"))
+            {
+                if (ChekLevel == (int)LevelGame.First)
+                {
+                    scoreLevel1 = apples;
+                }
+                if (ChekLevel == 0)
+                {
+                    scoreLevel2 = apples;
+                }
+                if (ChekLevel == (int)LevelGame.Thierd)
+                {
+                    scoreLevel3 = apples;
+                }
+
+                using (StreamWriter sw = new StreamWriter(@"score.txt"))
+                {
+                    sw.WriteLine($"{(int)LevelGame.First},{scoreLevel1}");
+                    sw.WriteLine($"{(int)LevelGame.Second},{scoreLevel2}");
+                    sw.WriteLine($"{(int)LevelGame.Thierd},{scoreLevel3}");
+                    sw.Close();
+                }
+                MessageBox.Show($"Вы набрали {apples} яблок", "Инфа", MessageBoxButtons.OK);
+                Close();
+            }
+            Application.Exit();
+        }
 
         private void FormGame_KeyDown(object sender, KeyEventArgs e)          //выбор направления
         {
@@ -105,18 +223,14 @@ namespace SnakeSuper
 
             if (e.KeyCode == Keys.Escape)
             {
-                timer.Stop();
-                MessageBox.Show($"Вы набрали {apples} яблок", "Инфа", MessageBoxButtons.OK);
-                Close();
+                StopGameWinner();
             }
         }
 
-
-        private void WallBarrier(object sender, PaintEventArgs e)
+        private void WallBarrier(object sender, PaintEventArgs e)            //проверка на пересечение с помехами(уровень 3)
         {
-            if (flag)
+            if (flagInitialiseBarrier)
             {
-
                 for (int i = 0; i < wConst; i++)
                 {
                     barrier[i] = new Rectangle(
@@ -124,19 +238,18 @@ namespace SnakeSuper
                     wall.Y = rand.Next(30, H - 20) / sConst * sConst,
                     sConst, sConst);
                 }
-                flag = false;
+                flagInitialiseBarrier = false;
             }
 
             for (int i = 0; i < wConst; i++)
             {
                 e.Graphics.FillRectangle(Brushes.Gold, barrier[i]);
             }
-
         }
-        
+
         private void DrawGrid(object sender, PaintEventArgs e)       //прорисовка сетки для уровня <1>
         {
-           using (Pen pen = new Pen(Color.Gray, 0.05f))
+            using (Pen pen = new Pen(Color.Gray, 0.05f))
             {
                 //Горизонтальные линии
                 for (int i = 0; i < H; i += sConst)
@@ -146,22 +259,22 @@ namespace SnakeSuper
                     e.Graphics.DrawLine(pen, i, 0, i, H);
             }
         }
-        
-        private void FormGame_Paint(object sender, PaintEventArgs e)
+
+        private void FormGame_Paint(object sender, PaintEventArgs e)        //прорисовка графики фигур
         {
             // рисуем красным кружком яблоко, синим квадратом голову змеи и зелеными квадратами тело змеи
-            e.Graphics.FillEllipse(Brushes.Red, new Rectangle(apple.X, apple.Y, sConst, sConst));
+            e.Graphics.FillEllipse(Brushes.Red, new Rectangle(appleBody.apple.X, appleBody.apple.Y, sConst, sConst));
 
-            e.Graphics.FillRectangle(Brushes.Blue, new Rectangle(snake[0].X, snake[0].Y, sConst, sConst));
-            for (int i = 1; i < snake.Count; i++)
+            e.Graphics.FillRectangle(Brushes.Blue, new Rectangle(snakeBodyMove.snake[0].X, snakeBodyMove.snake[0].Y, sConst, sConst));
+            for (int i = 1; i < snakeBodyMove.snake.Count; i++)
             {
-                e.Graphics.FillRectangle(Brushes.Green, new Rectangle(snake[i].X, snake[i].Y, sConst, sConst));
+                e.Graphics.FillRectangle(Brushes.Green, new Rectangle(snakeBodyMove.snake[i].X, snakeBodyMove.snake[i].Y, sConst, sConst));
             }
         }
 
         public void timer_Tick(object sender, EventArgs e)
         {
-            int x = snake[0].X, y = snake[0].Y;           //  координаты головы змеи
+            int x = snakeBodyMove.snake[0].X, y = snakeBodyMove.snake[0].Y;           //  координаты головы змеи
 
             switch (way)
             {
@@ -189,24 +302,31 @@ namespace SnakeSuper
 
             CoordSnake c = new CoordSnake() { X = x, Y = y };            // сегмент с новыми координатами головы
 
-            snake.Insert(0, c); // вставляем его в начало списка сегментов змеи(змея выросла на один сегмент)
+            snakeBodyMove.snake.Insert(0, c); // вставляем его в начало списка сегментов змеи(змея выросла на один сегмент)
 
-            for (int i = 0; i < wConst; i++)        //проверка на пересечение с препятствием
+            for (int i = 1; i < snakeBodyMove.snake.Count; i++)
             {
-                if (snake[0].X == barrier[i].X && snake[0].Y == barrier[i].Y)
+                if (snakeBodyMove.snake[0].X == snakeBodyMove.snake[i].X
+                 && snakeBodyMove.snake[0].Y == snakeBodyMove.snake[i].Y)
                 {
-                    timer.Stop();
-                    MessageBox.Show($"К сожалению вы поиграли. Но вы набрали {apples} яблок", 
-                        "Инфа", MessageBoxButtons.OK);
-
-                    Close();
+                    StopGame();
                 }
             }
 
-            if (snake[0].X == apple.X && snake[0].Y == apple.Y) // если координаты головы и яблока совпали
+            for (int i = 0; i < wConst; i++)        //проверка на пересечение с препятствием
+            {
+                if (snakeBodyMove.snake[0].X == barrier[i].X
+                 && snakeBodyMove.snake[0].Y == barrier[i].Y)
+                {
+                    StopGame();
+                }
+            }
+
+            if (snakeBodyMove.snake[0].X == appleBody.apple.X
+               && snakeBodyMove.snake[0].Y == appleBody.apple.Y) // если координаты головы и яблока совпали
             {
                 // располагаем яблоко в новых случайных координатах
-                apple = new CoordSnake()
+                appleBody.apple = new CoordSnake()
                 {
                     X = rand.Next(20, W - 20) / sConst * sConst,
                     Y = rand.Next(30, H - 20) / sConst * sConst
@@ -215,20 +335,16 @@ namespace SnakeSuper
                 apples++;                                           // увеличиваем счетчик собранных яблок
 
                 if (apples % 5 == 0)                                // после каждого пятого яблока увеличиваем скорость
-                {
+                {                                                   // уменьшая время таймера
                     timer.Interval -= 10;
                 }
             }
             // если координаты головы и яблока не совпали - убираем последний сегмент змеи
             else
             {
-                snake.RemoveAt(snake.Count - 1);
+                snakeBodyMove.snake.RemoveAt(snakeBodyMove.snake.Count - 1);
             }
             Invalidate();                                            // перерисовываем, 
         }
-
-
-
-
     }
 }
